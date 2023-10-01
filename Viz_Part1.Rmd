@@ -190,3 +190,30 @@ ggp_weather
 ggp_weather
 ```
 
+# Learning assessment
+ Make plots that compare precipitation across locations. Try a histogram, a density plot, a boxplot, a violin plot, and a ridgeplot; use aesthetic mappings to make your figure readable.
+ 
+```{r}
+weather_df %>%
+  ggplot(aes(x = prcp)) + 
+  geom_histogram(aes(color = name))
+
+#density plot 
+ggplot(weather_df, aes(x = prcp)) + 
+  geom_density(aes(fill = name), alpha = .5) 
+
+#ridge plot
+ggplot(weather_df, aes(x = prcp, y = name)) + 
+  geom_density_ridges(scale = .85)
+
+#boxplot
+ggplot(weather_df, aes(y = prcp, x = name)) + 
+  geom_boxplot() 
+
+weather_df |> 
+  filter(prcp > 0) |> 
+  ggplot(aes(x = prcp, y = name)) + 
+  geom_density_ridges(scale = .85)
+
+```
+ 
