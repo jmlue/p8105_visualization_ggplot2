@@ -8,6 +8,13 @@ output: github_document
 ```{r}
 library(tidyverse)
 library(ggridges)
+
+#Options to set figure wedith/sets for WHOLE RMD
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6, #keep same ratio based on above width
+  out.width = "90%" #take up 90% width of html doc
+)
 ```
 
 Get the data for plotting
@@ -55,6 +62,131 @@ ggp_nycweather =
 ## Fancy plot tools
 
 ```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax, color = name)) + 
+  geom_point() +
+  geom_smooth() # fits in line through each colored variable as in ggplot command
 
+ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color=name)) +
+  geom_smooth() # fits in line through each colored variable, but as color in geom_point only, lines based on info put in on primary ggplot command
+
+ggplot(weather_df, aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(aes(color = name), alpha = 0.3) + # to make them a bit more translucent
+  geom_smooth(se = FALSE) #standard error removed
+```
+
+## Plot with facets
+```{r}
+ggplot(weather_df, aes(x= tmin, y = tmax, color = name)) +
+  geom_point(alpha = 0.3) + #alpha blending
+  geom_smooth() +
+  facet_grid(. ~ name) #one row, separated by name, or name on one row, vs facet_grid( name ~.), generally orders variable based on alphabetical order (but can change up using factors)
+```
+
+Let's try a different plot. Temps are boring
+
+```{r}
+ggplot(weather_df, aes(x= date, y = tmax, color = name)) +
+  geom_point(aes(size = prcp), alpha = 0.3) +
+  geom_smooth() + 
+  facet_grid(. ~ name)
+```
+
+Try assigning a specific color
+```{r}
+weather_df %>%
+  filter(name == "CentralPark_NY") %>%
+  ggplot(aes(x = date, y = tmax)) + #taking data and mapping aestehtics to plot
+  geom_point(color = "blue") # modifying details of presentation only
+
+weather_df %>%
+  filter(name != "CentralPark_NY") %>%
+  #rename(Date = date)
+  ggplot(aes(x = date, y = tmax, color = name)) + #taking data and mapping aestehtics to plot
+  geom_point(alpha = 0.7, size = 0.5) # modifying details of presentation only
+```
+
+
+```{r}
+weather_df %>%
+  ggplot(aes(x = tmin, y= tmax)) + 
+  geom_hex() #make some heat mapping to data points on plot when lots of data to show
+```
+
+
+Line plots!
+```{r}
+#line plots, for longitudinal dataset
+weather_df %>%
+  filter(name == "Molokai_HI") %>%
+  ggplot(aes(x = date, y = tmax)) + 
+  geom_line(alpha = 0.5) + 
+  geom_point(size = 0.5)
+```
+
+
+## Univariate plotting
+
+Histogram
+```{r}
+ggplot(weather_df, aes(x= tmax, color = name)) +
+  geom_histogram()
+
+ggplot(weather_df, aes(x= tmax, fill = name)) + 
+  geom_histogram()  #5
+
+ggplot(weather_df, aes(x = tmax, fill = name)) +
+  geom_histogram(position = "dodge")
+```
+
+
+Let's use density plot
+```{r}
+ggplot(weather_df, aes(x = tmax, fill = name)) +
+  geom_density(alpha = 0.3, adjust = 0.5) #sort of smoothed over histogram, alpha for transparency, adjust for smoothness (avoid over- or under-smooothing)
+```
+
+Using Boxplots!
+```{r}
+ggplot(weather_df, aes(y = tmax)) + #so vertical
+  geom_boxplot()
+
+ggplot(weather_df, aes(y = tmax, x= name)) + #so vertical y first, then x to break up
+  geom_boxplot()
+
+```
+
+Violin plots?
+```{r}
+ggplot(weather_df, aes(y = tmax, x= name)) +
+  geom_violin() #orient vertically then flip
+```
+
+Ridge plot
+```{r}
+ggplot(weather_df, aes(x = tmax, y = name)) +
+  geom_density_ridges()
+```
+
+## Saving and embedding plots
+
+```{r}
+ggp_weather =
+  weather_df %>%
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point()
+
+ggp_weather
+
+ggsave("data/Results/ggp_weather.pdf", ggp_weather)
+```
+
+```{r, fig.width= 12, fig.height= 12}
+ggp_weather
+
+```
+
+```{r, fig.width= 6, fig.asp= 0.6}
+ggp_weather
 ```
 
