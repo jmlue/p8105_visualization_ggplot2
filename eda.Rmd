@@ -110,5 +110,43 @@ weather_df %>%
     values_from = mean_tmax
   ) %>%
   knitr::kable(digits = 2) #helps to make better looking RMD table
- ```
+```
+
+## Grouped mutate
+
+```{r}
+weather_df %>%
+  group_by(name) %>%
+  mutate(mean_tmax = mean(tmax, na.rm = TRUE), #so gives mean_tmax of the GROUP 
+         centered_tmax = tmax - mean_tmax) %>% 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) +
+  geom_point()
+
+```
+
+```{r}
+weather_df %>%
+  group_by(name, month) %>%
+  mutate(tmax_rank = min_rank(desc(tmax))) %>%
+  filter(tmax_rank < 2)
+```
+
+# lags
+
+```{r}
+weather_df %>%
+  group_by(name) %>%
+  mutate(yesterday_tmax = lag(tmax)) #makes new variable that pulls in the temp from day prior, BUT if you forget to gropu by name would mess it up
+
+weather_df %>%
+  group_by(name) %>%
+  mutate(yesterday_tmax = lag(tmax, 3)) #makes new variable that pulls in the temp from 3 rows back
+
+weather_df %>% 
+  group_by(name) %>%
+  mutate(temp_change = tmax - lag(tmax)) %>%
+  summarize(
+    sd_temp_change = sd(temp_change, na.rm = TRUE)
+  )
+```
 
