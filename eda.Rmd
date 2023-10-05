@@ -1,0 +1,114 @@
+---
+title: "EDA: Numeric summaries"
+author: "Jesus Luevano"
+date: "2023-10-05"
+output: github_document
+---
+
+
+```{r}
+library(tidyverse)
+library(ggridges)
+library(patchwork)
+
+#Options to set figure wedith/sets for WHOLE RMD
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6, #keep same ratio based on above width
+  out.width = "90%" #take up 90% width of html doc
+)
+
+theme_set(theme_minimal())
+```
+
+Get the data for plotting
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USW00022534", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2021-01-01",
+    date_max = "2022-12-31") |>
+  mutate(
+    name = recode(
+      id, 
+      USW00094728 = "CentralPark_NY", 
+      USW00022534 = "Molokai_HI",
+      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10,
+    month = lubridate::floor_date(date, unit = "month")) |>
+  select(name, id, everything())
+
+```
+
+## Initial polot
+```{r}
+weather_df |> 
+  ggplot(aes(x = prcp)) + 
+  geom_histogram()
+
+weather_df |> 
+  filter(prcp >= 1000)
+
+weather_df |> 
+  filter(tmax >= 20, tmax <= 30) |> 
+  ggplot(aes(x = tmin, y = tmax, color = name, shape = name)) + 
+  geom_point(alpha = .75)
+```
+
+
+## Grouping
+```{r}
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(n_obs = n())
+
+weather_df %>%
+  count(name, name = "n_obs") #can make 2x2 table
+
+weather_df %>% #output as tidy
+  count(name, month)
+
+#make it more legible output, pivot_wider to untidy it
+weather_df %>%
+  count(name, month) %>%
+  pivot_wider(
+    names_from = name,
+    values_from = n
+  )
+```
+
+## General summaries
+
+```{r}
+weather_df %>%
+  group_by(name) %>%
+  summarize(
+    mean_tmax = mean(tmax, na.rm = TRUE), #na.rm default is FALSE
+    median_tmax = median(tmax, na.rm = TRUE),
+    sd_tmax = sd(tmax, na.rm = TRUE)
+  )
+```
+
+```{r}
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>%
+  ggplot(aes(x = month, y = mean_tmax, color= name)) +
+  geom_point() +
+  geom_line()
+```
+
+```{r}
+weather_df %>%
+  group_by(name, month) %>%
+  summarise(mean_tmax = mean(tmax, na.rm = TRUE)) %>%
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax
+  ) %>%
+  knitr::kable(digits = 2) #helps to make better looking RMD table
+ ```
+
